@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using Newtonsoft.Json;
 
 namespace GummySaveManager {
     internal class Utility {
@@ -80,72 +79,53 @@ namespace GummySaveManager {
                 CopyDirectory(subDir, destDir);
             }
         }
-
-        public static void SaveClass(object toSave) {
-            string json = JsonConvert.SerializeObject(toSave, Formatting.Indented);
-            try {
-                File.WriteAllText(".\\Data\\saves.json", json);
-                Logger.LogMessage("Saved game data successfully");
-            }
-            catch (Exception ex) {
-                Logger.LogMessage($"Failed to save game data - {ex.Message}", Logger.Severity.ERROR);
-            }
-        }
-
-        public static SaveManager LoadManagerFromFile() {
-            if (File.Exists(DataPath + ".\\saves.json")) {
-                string loadedJson = File.ReadAllText(DataPath + ".\\saves.json");
-                return JsonConvert.DeserializeObject<SaveManager>(loadedJson) ?? new();
-            }
-            return new();
-        }
     }
+}
 
 
-    internal class Logger {
-        private static readonly string logDirectory = "Logs";
-        private static readonly string logFilePath = Path.Combine(logDirectory, "output-" + DateTime.Now.ToString("dd-MM-yyyy")) + ".log";
+internal class Logger {
+    private static readonly string logDirectory = "Logs";
+    private static readonly string logFilePath = Path.Combine(logDirectory, "output-" + DateTime.Now.ToString("dd-MM-yyyy")) + ".log";
 
-        public enum Severity { INFO, WARN, ERROR }
+    public enum Severity { INFO, WARN, ERROR }
 
-        private static readonly int daysToKeepLogs = 10;
+    private static readonly int daysToKeepLogs = 10;
 
-        static Logger() {
-            PokeDirectory(logDirectory);
+    static Logger() {
+        PokeDirectory(logDirectory);
 
-            foreach (string filePath in Directory.GetFiles(logDirectory)) {
-                FileInfo fileInfo = new(filePath);
-                TimeSpan age = DateTime.Now - fileInfo.CreationTime;
-                if (age.Days > daysToKeepLogs) {
-                    try {
-                        File.Delete(filePath);
-                    }
-                    catch (Exception ex) {
-                        LogMessage($"Failed to delete old log \"{filePath}\" - {ex.Message}", Severity.ERROR);
-                    }
+        foreach (string filePath in Directory.GetFiles(logDirectory)) {
+            FileInfo fileInfo = new(filePath);
+            TimeSpan age = DateTime.Now - fileInfo.CreationTime;
+            if (age.Days > daysToKeepLogs) {
+                try {
+                    File.Delete(filePath);
+                }
+                catch (Exception ex) {
+                    LogMessage($"Failed to delete old log \"{filePath}\" - {ex.Message}", Severity.ERROR);
                 }
             }
         }
+    }
 
-        public static void LogMessage(string message, Severity severity = Severity.INFO) {
-            Console.WriteLine(message);
-            switch (severity) {
-                case Severity.WARN:
-                    message = "[WARN] " + message; break;
-                case Severity.ERROR:
-                    message = "[ERROR] " + message; break;
-            }
-            AppendToFile(logFilePath, message);
+    public static void LogMessage(string message, Severity severity = Severity.INFO) {
+        Console.WriteLine(message);
+        switch (severity) {
+            case Severity.WARN:
+                message = "[WARN] " + message; break;
+            case Severity.ERROR:
+                message = "[ERROR] " + message; break;
         }
+        AppendToFile(logFilePath, message);
+    }
 
-        private static void AppendToFile(string filePath, string toAdd) {
-            try {
-                using StreamWriter writer = File.AppendText(filePath);
-                writer.WriteLine($"[{DateTime.Now}] {toAdd}");
-            }
-            catch (Exception ex) {
-                Debug.WriteLine($"Error writing to log file: {ex.Message}");
-            }
+    private static void AppendToFile(string filePath, string toAdd) {
+        try {
+            using StreamWriter writer = File.AppendText(filePath);
+            writer.WriteLine($"[{DateTime.Now}] {toAdd}");
+        }
+        catch (Exception ex) {
+            Debug.WriteLine($"Error writing to log file: {ex.Message}");
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using static GummySaveManager.Compressor;
 using Newtonsoft.Json;
 using System.Collections;
+using System.Diagnostics;
 
 namespace GummySaveManager {
     //Holds the relations between folders in the archive and their original position 
@@ -21,9 +22,12 @@ namespace GummySaveManager {
         private readonly List<string> folderPaths = [];
         [JsonProperty("backups")]
         private readonly List<BackupInfo> backups = [];
+        [JsonProperty("category")]
+        public string category = "";
 
-        public GameSave(string name) {
+        public GameSave(string name, string category) {
             this.name = name.Replace(" ", "-");
+            this.category = category;
         }
 
         public void AddFolderPath(string path) { folderPaths.Add(path); }
@@ -34,7 +38,8 @@ namespace GummySaveManager {
 
         public void AddBackup(string backupName) {
             //Check to make sure the name is unique in the backup list
-            foreach (BackupInfo backup in backups) {
+            foreach (BackupInfo backup in this.backups) {
+                Debug.WriteLine($"Backup name {backup.BackupName}");
                 if (backup.BackupName == backupName) {
                     throw new Exception("Error: A backup with that name already exists");
                 }
@@ -76,10 +81,34 @@ namespace GummySaveManager {
 
     }
     internal class SaveManager : IEnumerable<GameSave> {
-        private readonly List<GameSave> saves = [];
+        private List<GameSave> saves = [];
 
         public SaveManager() {
 
+        }
+
+        public void Add(GameSave save) {
+            saves.Add(save);
+        }
+
+        public void Save() {
+            string json = JsonConvert.SerializeObject(this, Formatting.Indented);
+            try {
+                File.WriteAllText(".\\Data\\saves.json", json);
+                Logger.LogMessage("Saved game data successfully");
+            }
+            catch (Exception ex) {
+                Logger.LogMessage($"Failed to save game data - {ex.Message}", Logger.Severity.ERROR);
+            }
+        }
+
+        public void LoadFromFile() {
+            if (File.Exists(DataPath + ".\\saves.json")) {
+                string loadedJson = File.ReadAllText(DataPath + ".\\saves.json");
+                saves = JsonConvert.DeserializeObject<List<GameSave>>(loadedJson) ?? [];
+            }else {
+                Logger.LogMessage("Save file does not exist. It will be generated when any saves are created.");
+            }
         }
 
         public GameSave this[int index] {
@@ -95,10 +124,6 @@ namespace GummySaveManager {
                 }
                 saves[index] = value;
             }
-        }
-
-        public void Add(GameSave save) {
-            saves.Add(save);
         }
 
         public IEnumerator<GameSave> GetEnumerator() {

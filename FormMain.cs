@@ -1,9 +1,11 @@
 namespace GummySaveManager {
     public partial class FormMain : Form {
 
-        private SaveManager SavesManager = LoadManagerFromFile();
+        private readonly SaveManager SavesManager = [];
         public FormMain() {
             InitializeComponent();
+            SavesManager.LoadFromFile();
+            RefreshGameList();
             //List_Games.Items.Add(SaveManager[0].name);
         }
 
@@ -12,17 +14,17 @@ namespace GummySaveManager {
         }
 
         private void Btn_AddGame_Click(object sender, EventArgs e) {
-            GameSave fireE = new("Fire Emblem");
-            fireE.AddFolderPath("E:\\Downloads\\assetwork");
-            fireE.AddFolderPath("C:\\Users\\Cain\\Desktop\\Data");
-            fireE.AddBackup("testback");
-            SavesManager.Add(fireE);
-            RefreshGameList();
-            SaveClass(SavesManager);
+            //GameSave fireE = new("Fire Emblem", "Default");
+            //fireE.AddFolderPath("E:\\Downloads\\assetwork");
+            //fireE.AddFolderPath("C:\\Users\\Cain\\Desktop\\Data");
+            //fireE.AddBackup("testback");
+            //SavesManager.Add(fireE);
+            //RefreshGameList();
+            //SaveManager(SavesManager);
         }
 
         private void RefreshGameList() {
-            foreach(GameSave game in SavesManager) {
+            foreach (GameSave game in SavesManager) {
                 List_Games.Items.Add(game.name);
             }
         }
