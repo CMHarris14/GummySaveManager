@@ -27,12 +27,13 @@ namespace GummySaveManager {
             CBox_Groups = new ComboBox();
             List_Games = new ListBox();
             Btn_AddGame = new Button();
+            Btn_Settings = new Button();
             SuspendLayout();
             // 
             // CBox_Groups
             // 
+            CBox_Groups.DropDownStyle = ComboBoxStyle.DropDownList;
             CBox_Groups.FormattingEnabled = true;
-            CBox_Groups.Items.AddRange(new object[] { "Default" });
             CBox_Groups.Location = new Point(12, 12);
             CBox_Groups.Name = "CBox_Groups";
             CBox_Groups.Size = new Size(209, 23);
@@ -50,19 +51,31 @@ namespace GummySaveManager {
             // 
             // Btn_AddGame
             // 
-            Btn_AddGame.Location = new Point(29, 426);
+            Btn_AddGame.Location = new Point(48, 422);
             Btn_AddGame.Name = "Btn_AddGame";
-            Btn_AddGame.Size = new Size(168, 23);
+            Btn_AddGame.Size = new Size(173, 30);
             Btn_AddGame.TabIndex = 2;
             Btn_AddGame.Text = "Add Game";
             Btn_AddGame.UseVisualStyleBackColor = true;
             Btn_AddGame.Click += Btn_AddGame_Click;
+            // 
+            // Btn_Settings
+            // 
+            Btn_Settings.BackgroundImage = Properties.Resources.gear;
+            Btn_Settings.BackgroundImageLayout = ImageLayout.Zoom;
+            Btn_Settings.Location = new Point(12, 422);
+            Btn_Settings.Name = "Btn_Settings";
+            Btn_Settings.Size = new Size(30, 30);
+            Btn_Settings.TabIndex = 3;
+            Btn_Settings.UseVisualStyleBackColor = true;
+            Btn_Settings.Click += Btn_Settings_Click;
             // 
             // FormMain
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 457);
+            Controls.Add(Btn_Settings);
             Controls.Add(Btn_AddGame);
             Controls.Add(List_Games);
             Controls.Add(CBox_Groups);
@@ -78,5 +91,6 @@ namespace GummySaveManager {
         private ComboBox CBox_Groups;
         private ListBox List_Games;
         private Button Btn_AddGame;
+        private Button Btn_Settings;
     }
 }

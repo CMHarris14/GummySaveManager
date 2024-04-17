@@ -1,17 +1,13 @@
 ﻿using System.Diagnostics;
+using System.Windows.Forms.VisualStyles;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace GummySaveManager {
     internal class Utility {
-        public static string BackupPath = ".\\Backups\\";
-        public static string DataPath = ".\\Data\\";
-
-        static Utility() {
-            PokeDirectory(BackupPath);
-            PokeDirectory(DataPath);
-        }
 
         public static void PokeDirectory(string directory) {
-            if (!Directory.Exists(directory)) {
+            if (!Directory.Exists("\"" + directory + "\"")) {
                 Directory.CreateDirectory(directory);
             }
         }
@@ -28,7 +24,8 @@ namespace GummySaveManager {
                     File.Delete(source);
                 }
                 else if (Directory.Exists(destination)) {
-                    CopyDirectory(destination, source);
+                    CopyDirectory(source, destination);
+                    Directory.Delete(source, true);
                 }
                 Logger.LogMessage("Success");
             }
@@ -80,52 +77,107 @@ namespace GummySaveManager {
             }
         }
     }
-}
+
+    internal static class Settings {
+        public static string BackupPath = ".\\Backups\\";
+        public static string DataPath = ".\\Data\\";
+        public static string DataFileName = "saves.json";
+        private readonly static string SettingsFileName = "settings.json";
+
+        internal static string DataFilePath() {
+            return DataPath + DataFileName;
+        }
+
+        internal static string SettingsFilePath() {
+            return DataPath + SettingsFileName;
+        }
+
+        internal static void Save() {
+            PokeDirectory(DataPath);
+            //Create temp object to serialize values to json
+            var tmp = new {
+                backupPath = BackupPath,
+                dataPath = DataPath,
+                dataFileName = DataFileName
+
+            };
+            string json = JsonConvert.SerializeObject(tmp, Formatting.Indented);
+            try {
+                File.WriteAllText(SettingsFilePath(), json);
+                Logger.LogMessage("Saved settings");
+            }
+            catch (Exception ex) {
+                Logger.LogMessage($"Failed to save settings - {ex.Message}", Logger.Severity.ERROR);
+            }
+        }
+
+        public static void Load() {
+            if (File.Exists(SettingsFilePath())) {
+                string loadedJson = File.ReadAllText(SettingsFilePath());
+
+                dynamic? jsonImport = JsonConvert.DeserializeObject<dynamic>(loadedJson);
+
+                BackupPath = jsonImport?.backupPath ?? BackupPath;
+                DataPath = jsonImport?.dataPath ?? DataPath;
+                DataFileName = jsonImport?.dataFileName ?? DataFileName;
 
 
-internal class Logger {
-    private static readonly string logDirectory = "Logs";
-    private static readonly string logFilePath = Path.Combine(logDirectory, "output-" + DateTime.Now.ToString("dd-MM-yyyy")) + ".log";
-
-    public enum Severity { INFO, WARN, ERROR }
-
-    private static readonly int daysToKeepLogs = 10;
-
-    static Logger() {
-        PokeDirectory(logDirectory);
-
-        foreach (string filePath in Directory.GetFiles(logDirectory)) {
-            FileInfo fileInfo = new(filePath);
-            TimeSpan age = DateTime.Now - fileInfo.CreationTime;
-            if (age.Days > daysToKeepLogs) {
-                try {
-                    File.Delete(filePath);
-                }
-                catch (Exception ex) {
-                    LogMessage($"Failed to delete old log \"{filePath}\" - {ex.Message}", Severity.ERROR);
-                }
+                Logger.LogMessage($"Loading: BackupPath - {jsonImport?.backupPath}, DataPath - {jsonImport?.dataPath}, DataFileName - {jsonImport?.dataFileName}, GameCategories = {jsonImport?.categories}");
+            }
+            else {
+                Logger.LogMessage("Settings file does not exist. It will be created now with default values.");
+                Save();
             }
         }
     }
 
-    public static void LogMessage(string message, Severity severity = Severity.INFO) {
-        Console.WriteLine(message);
-        switch (severity) {
-            case Severity.WARN:
-                message = "[WARN] " + message; break;
-            case Severity.ERROR:
-                message = "[ERROR] " + message; break;
-        }
-        AppendToFile(logFilePath, message);
-    }
+    internal class Logger {
+        private static readonly string logDirectory = "Logs";
+        private static readonly string logFilePath = Path.Combine(logDirectory, "output-" + DateTime.Now.ToString("dd-MM-yyyy")) + ".log";
 
-    private static void AppendToFile(string filePath, string toAdd) {
-        try {
-            using StreamWriter writer = File.AppendText(filePath);
-            writer.WriteLine($"[{DateTime.Now}] {toAdd}");
+        public enum Severity { INFO, WARN, ERROR }
+
+        private static readonly int daysToKeepLogs = 10;
+
+        static Logger() {
+            PokeDirectory(logDirectory);
+
+            foreach (string filePath in Directory.GetFiles(logDirectory)) {
+                FileInfo fileInfo = new(filePath);
+                TimeSpan age = DateTime.Now - fileInfo.CreationTime;
+                if (age.Days > daysToKeepLogs) {
+                    try {
+                        File.Delete(filePath);
+                    }
+                    catch (Exception ex) {
+                        LogMessage($"Failed to delete old log \"{filePath}\" - {ex.Message}", Severity.ERROR);
+                    }
+                }
+            }
         }
-        catch (Exception ex) {
-            Debug.WriteLine($"Error writing to log file: {ex.Message}");
+
+        public static void LogMessage(string message, Severity severity = Severity.INFO) {
+            Console.WriteLine(message);
+            switch (severity) {
+                case Severity.WARN:
+                    message = "[WARN] " + message; break;
+                case Severity.ERROR:
+                    message = "[ERROR] " + message; break;
+            }
+            AppendToFile(logFilePath, message);
+        }
+
+        private static void AppendToFile(string filePath, string toAdd) {
+            try {
+                using StreamWriter writer = File.AppendText(filePath);
+                writer.WriteLine($"[{DateTime.Now}] {toAdd}");
+            }
+            catch (Exception ex) {
+                Debug.WriteLine($"Error writing to log file: {ex.Message}");
+            }
         }
     }
 }
+
+
+

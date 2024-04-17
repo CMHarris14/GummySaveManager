@@ -4,29 +4,40 @@ namespace GummySaveManager {
         private readonly SaveManager SavesManager = [];
         public FormMain() {
             InitializeComponent();
+            //Verify settings folders exists and load the settings
+            PokeDirectory(Settings.BackupPath);
+            Settings.Load();
             SavesManager.LoadFromFile();
-            RefreshGameList();
-            //List_Games.Items.Add(SaveManager[0].name);
+
+            CBox_Groups.Items.AddRange(SavesManager.GetCategories().ToArray());
         }
 
         private void CBox_Groups_SelectedIndexChanged(object sender, EventArgs e) {
-            throw new NotImplementedException();
+            RefreshGameList();
         }
 
         private void Btn_AddGame_Click(object sender, EventArgs e) {
-            //GameSave fireE = new("Fire Emblem", "Default");
-            //fireE.AddFolderPath("E:\\Downloads\\assetwork");
-            //fireE.AddFolderPath("C:\\Users\\Cain\\Desktop\\Data");
-            //fireE.AddBackup("testback");
-            //SavesManager.Add(fireE);
-            //RefreshGameList();
-            //SaveManager(SavesManager);
+            GameSave fireE = new("Fire Emblem", "Buttstuff");
+            fireE.AddFolderPath("E:\\Downloads\\assetwork");
+            fireE.AddFolderPath("C:\\Users\\Cain\\Desktop\\Data");
+            fireE.AddBackup("testback");
+            SavesManager.Add(fireE);
+            RefreshGameList();
+            SavesManager.Save();
         }
 
         private void RefreshGameList() {
+            List_Games.Items.Clear();
             foreach (GameSave game in SavesManager) {
-                List_Games.Items.Add(game.name);
+                if (game.category == CBox_Groups.Text) {
+                    List_Games.Items.Add(game.name);
+                }
             }
+        }
+
+        private void Btn_Settings_Click(object sender, EventArgs e) {
+            FormSettings settings = new();
+            settings.ShowDialog();
         }
     }
 }

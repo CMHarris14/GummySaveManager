@@ -6,7 +6,7 @@ using System.Diagnostics;
 namespace GummySaveManager {
     //Holds the relations between folders in the archive and their original position 
     //Needed to suggest restore locations later
-    public struct BackupInfo {
+    internal struct BackupInfo {
         public string BackupName;
         //Relations are <folder name, original path>
         public List<Tuple<string, string>> FileRelations;
@@ -26,7 +26,7 @@ namespace GummySaveManager {
         public string category = "";
 
         public GameSave(string name, string category) {
-            this.name = name.Replace(" ", "-");
+            this.name = name;
             this.category = category;
         }
 
@@ -46,10 +46,10 @@ namespace GummySaveManager {
             }
 
             //Make sure the backup directory exists
-            PokeDirectory(BackupPath + this.name);
+            PokeDirectory(Settings.BackupPath + this.name);
 
             CopyFilesAndFolders(this.folderPaths, ".\\tmp\\");
-            CompressDirectory(".\\tmp", BackupPath + this.name + "\\" + backupName + ".zip");
+            CompressDirectory(".\\tmp", Settings.BackupPath + this.name + "\\" + backupName + ".zip");
             Directory.Delete(".\\tmp", true);
 
             //Get the original locations and file names to the backup
@@ -91,10 +91,18 @@ namespace GummySaveManager {
             saves.Add(save);
         }
 
+        public List<string> GetCategories() {
+            HashSet<string> categories = [];
+            foreach(GameSave save in saves) {
+                categories.Add(save.category);
+            }
+            return [.. categories];
+        }
+
         public void Save() {
             string json = JsonConvert.SerializeObject(this, Formatting.Indented);
             try {
-                File.WriteAllText(".\\Data\\saves.json", json);
+                File.WriteAllText(Settings.DataFilePath(), json);
                 Logger.LogMessage("Saved game data successfully");
             }
             catch (Exception ex) {
@@ -103,8 +111,9 @@ namespace GummySaveManager {
         }
 
         public void LoadFromFile() {
-            if (File.Exists(DataPath + ".\\saves.json")) {
-                string loadedJson = File.ReadAllText(DataPath + ".\\saves.json");
+            if (File.Exists(Settings.DataFilePath())) {
+                Logger.LogMessage(Settings.DataFilePath());
+                string loadedJson = File.ReadAllText(Settings.DataFilePath());
                 saves = JsonConvert.DeserializeObject<List<GameSave>>(loadedJson) ?? [];
             }else {
                 Logger.LogMessage("Save file does not exist. It will be generated when any saves are created.");
