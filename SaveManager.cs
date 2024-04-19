@@ -46,10 +46,11 @@ namespace GummySaveManager {
             }
 
             //Make sure the backup directory exists
-            PokeDirectory(Settings.BackupPath + this.name);
+            PokeDirectory(Path.Join([Settings.BackupPath, this.name]));
 
             CopyFilesAndFolders(this.folderPaths, ".\\tmp\\");
-            CompressDirectory(".\\tmp", Settings.BackupPath + this.name + "\\" + backupName + ".zip");
+            string tmpPath = Path.Join([Settings.BackupPath, this.name, backupName]);
+            CompressDirectory(".\\tmp", tmpPath + ".zip");
             Directory.Delete(".\\tmp", true);
 
             //Get the original locations and file names to the backup
@@ -112,7 +113,6 @@ namespace GummySaveManager {
 
         public void LoadFromFile() {
             if (File.Exists(Settings.DataFilePath())) {
-                Logger.LogMessage(Settings.DataFilePath());
                 string loadedJson = File.ReadAllText(Settings.DataFilePath());
                 saves = JsonConvert.DeserializeObject<List<GameSave>>(loadedJson) ?? [];
             }else {
